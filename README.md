@@ -27,37 +27,37 @@ E-Learning platform will have **4 microservices** (one per member) and an **API 
 ```
 Swagger UI with backend/
 ├── api-gateway/
-│   ├── app.js
-│   ├── package.json
+│   ├── app.py
+│   ├── requirements.txt
 │   └── README.md
 │
 ├── student-service/           (Member A)
-│   ├── app.js
-│   ├── package.json
-│   ├── swagger.js
-│   └── data/
-│       └── students.js (in-memory database)
+│   ├── app.py
+│   ├── requirements.txt
+│   ├── swagger.py
+│   ├── models.py
+│   └── database.py
 │
 ├── course-service/            (Member B)
-│   ├── app.js
-│   ├── package.json
-│   ├── swagger.js
-│   └── data/
-│       └── courses.js
+│   ├── app.py
+│   ├── requirements.txt
+│   ├── swagger.py
+│   ├── models.py
+│   └── database.py
 │
 ├── enrollment-service/       (Member C)
-│   ├── app.js
-│   ├── package.json
-│   ├── swagger.js
-│   └── data/
-│       └── enrollments.js
+│   ├── app.py
+│   ├── requirements.txt
+│   ├── swagger.py
+│   ├── models.py
+│   └── database.py
 │
 └── grade-service/            (Member D)
-    ├── app.js
-    ├── package.json
-    ├── swagger.js
-    └── data/
-        └── grades.js
+    ├── app.py
+    ├── requirements.txt
+    ├── swagger.py
+    ├── models.py
+    └── database.py
 ```
 
 ---
@@ -75,18 +75,70 @@ Swagger UI with backend/
 
 ## Technology Stack
 
-- **Runtime:** Node.js
-- **Framework:** Express.js
-- **API Documentation:** Swagger UI
-- **Gateway:** http-proxy-middleware
+- **Language:** Python 3.8+
+- **Framework:** Flask
+- **Database:** SQLite (via SQLAlchemy ORM)
+- **API Documentation:** Swagger UI (via flasgger)
+- **Gateway:** Flask with custom routing
+
+---
+
+## Database Design
+
+Each microservice has its own SQLite database file for data persistence:
+
+### Student Service Database (`student_service.db`)
+```sql
+CREATE TABLE students (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    phone VARCHAR(20),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### Course Service Database (`course_service.db`)
+```sql
+CREATE TABLE courses (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title VARCHAR(200) NOT NULL,
+    description TEXT,
+    instructor VARCHAR(100),
+    credits INTEGER DEFAULT 3,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### Enrollment Service Database (`enrollment_service.db`)
+```sql
+CREATE TABLE enrollments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id INTEGER NOT NULL,
+    course_id INTEGER NOT NULL,
+    enrollment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status VARCHAR(20) DEFAULT 'active'
+);
+```
+
+### Grade Service Database (`grade_service.db`)
+```sql
+CREATE TABLE grades (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    enrollment_id INTEGER NOT NULL,
+    grade VARCHAR(5),
+    feedback TEXT,
+    graded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
 
 ---
 
 ## Getting Started
 
 ### Prerequisites
-- Node.js (v14 or higher)
-- npm (Node Package Manager)
+- Python 3.8 or higher
+- pip (Python Package Manager)
 
 ### Installation
 
@@ -95,24 +147,24 @@ Swagger UI with backend/
 
 ```bash
 # Install API Gateway dependencies
-cd Swagger UI with backend/api-gateway
-npm install
+cd "Swagger UI with backend/api-gateway"
+pip install -r requirements.txt
 
 # Install Student Service dependencies
 cd ../student-service
-npm install
+pip install -r requirements.txt
 
 # Install Course Service dependencies
 cd ../course-service
-npm install
+pip install -r requirements.txt
 
 # Install Enrollment Service dependencies
 cd ../enrollment-service
-npm install
+pip install -r requirements.txt
 
 # Install Grade Service dependencies
 cd ../grade-service
-npm install
+pip install -r requirements.txt
 ```
 
 ### Running the Services
@@ -121,24 +173,24 @@ Start each service in separate terminals:
 
 ```bash
 # Terminal 1 - API Gateway (Port 8080)
-cd Swagger UI with backend/api-gateway
-node app.js
+cd "Swagger UI with backend/api-gateway"
+python app.py
 
 # Terminal 2 - Student Service (Port 5001)
-cd Swagger UI with backend/student-service
-node app.js
+cd "Swagger UI with backend/student-service"
+python app.py
 
 # Terminal 3 - Course Service (Port 5002)
-cd Swagger UI with backend/course-service
-node app.js
+cd "Swagger UI with backend/course-service"
+python app.py
 
 # Terminal 4 - Enrollment Service (Port 5003)
-cd Swagger UI with backend/enrollment-service
-node app.js
+cd "Swagger UI with backend/enrollment-service"
+python app.py
 
 # Terminal 5 - Grade Service (Port 5004)
-cd Swagger UI with backend/grade-service
-node app.js
+cd "Swagger UI with backend/grade-service"
+python app.py
 ```
 
 ---
