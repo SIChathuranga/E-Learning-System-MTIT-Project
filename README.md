@@ -69,7 +69,32 @@ Swagger UI with backend/
 | Member A | Student Service | Manage student profiles, registration, authentication | GET/POST/PUT/DELETE /students |
 | Member B | Course Service | Manage course catalog, course details, instructors | GET/POST/PUT/DELETE /courses |
 | Member C | Enrollment Service | Handle student enrollments, drop courses, enrollment history | GET/POST/DELETE /enrollments |
-| Member D | Grade Service | Manage grades, grade submissions, grade reports | GET/POST/PUT /grades |
+| Member D | Grade Service | Manage grades, grade submissions, grade reports, GPA analytics | GET/POST/PUT/DELETE /grades |
+
+### Grade Service Key Features
+
+The Grade Service provides comprehensive grade management capabilities:
+
+- **Create, Read, Update, Delete grades** - Full CRUD operations for grade records
+- **Search by instructor** - Query grades filtered by instructor name
+- **Check availability** - Verify grade availability for enrollments
+- **Generate GPA** - Calculate and generate Grade Point Average reports
+- **Duplicate protection** - Prevent duplicate grade records for the same `enrollment_id` (`409 Conflict`)
+- **Validation and error handling** - Required field checks (`400`), not found responses (`404`), and conflict handling (`409`)
+
+### Grade Service Endpoints (Implemented)
+
+- `GET /health`
+- `GET /grades`
+- `GET /grades/<grade_id>`
+- `GET /grades/enrollment/<enrollment_id>`
+- `GET /grades/instructor/<instructor>`
+- `GET /grades/availability/<enrollment_id>`
+- `GET /grades/gpa/<enrollment_id>`
+- `GET /grades/gpa/overall`
+- `POST /grades`
+- `PUT /grades/<grade_id>`
+- `DELETE /grades/<grade_id>`
 
 ---
 
@@ -126,11 +151,15 @@ CREATE TABLE enrollments (
 CREATE TABLE grades (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     enrollment_id INTEGER NOT NULL,
+    instructor VARCHAR(100),
     grade VARCHAR(5),
     feedback TEXT,
     graded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```
+
+Business rule implemented in API layer:
+- One grade record is allowed per `enrollment_id` (duplicate create/update returns `409 Conflict`).
 
 ---
 
@@ -204,7 +233,7 @@ python app.py
 | Student Service | http://localhost:5001 | http://localhost:5001/api-docs |
 | Course Service | http://localhost:5002 | http://localhost:5002/api-docs |
 | Enrollment Service | http://localhost:5003 | http://localhost:5003/api-docs |
-| Grade Service | http://localhost:5004 | http://localhost:5004/api-docs |
+| Grade Service | http://localhost:5004 | http://localhost:5004/apidocs |
 
 ### Via API Gateway
 
@@ -213,7 +242,7 @@ python app.py
 | Student Service | http://localhost:8080/student-service | http://localhost:8080/student-service/api-docs |
 | Course Service | http://localhost:8080/course-service | http://localhost:8080/course-service/api-docs |
 | Enrollment Service | http://localhost:8080/enrollment-service | http://localhost:8080/enrollment-service/api-docs |
-| Grade Service | http://localhost:8080/grade-service | http://localhost:8080/grade-service/api-docs |
+| Grade Service | http://localhost:8080/grade-service | http://localhost:8080/grade-service/apidocs |
 
 ### Health Check
 ```
