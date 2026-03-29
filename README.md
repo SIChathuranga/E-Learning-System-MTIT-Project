@@ -1,289 +1,165 @@
 # E-Learning-System-MTIT-Project
 
-E-Learning platform will have **4 microservices** (one per member) and an **API Gateway**
-
----
+E-Learning platform built with four microservices and a shared API Gateway.
 
 ## Architecture Overview
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                    API Gateway (Port 8080)              │
-│              Single entry point for all requests        │
-└─────────────────────────────────────────────────────────┘
-         │              │              │              │
-         ▼              ▼              ▼              ▼
-┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐
-│   Student   │ │   Course    │ │ Enrollment  │ │   Grade     │
-│  Service    │ │  Service    │ │  Service    │ │  Service    │
-│  Port 5001  │ │  Port 5002  │ │  Port 5003  │ │  Port 5004  │
-└─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘
-```
+```text
+                    API Gateway (Port 8080)
+               Single entry point for all requests
 
----
+        Student        Course        Enrollment        Grade
+        Service        Service        Service         Service
+        Port 8000      Port 5002      Port 5003       Port 5004
+```
 
 ## Project Structure
 
-```
+```text
 Swagger UI with backend/
 ├── api-gateway/
+│   ├── app.js
+│   ├── package.json
+│   └── README.md
+├── student-service/
+│   ├── main.py
+│   ├── requirements.txt
+│   ├── database.py
+│   └── models.py
+├── course-service/
+│   ├── app.js
+│   ├── package.json
+│   └── package-lock.json
+├── enrollment-service/
 │   ├── app.py
 │   ├── requirements.txt
 │   └── README.md
-│
-├── student-service/           (Member A)
-│   ├── app.py
-│   ├── requirements.txt
-│   ├── swagger.py
-│   ├── models.py
-│   └── database.py
-│
-├── course-service/            (Member B)
-│   ├── app.py
-│   ├── requirements.txt
-│   ├── swagger.py
-│   ├── models.py
-│   └── database.py
-│
-├── enrollment-service/       (Member C)
-│   ├── app.py
-│   ├── requirements.txt
-│   ├── swagger.py
-│   ├── models.py
-│   └── database.py
-│
-└── grade-service/            (Member D)
+└── grade-service/
     ├── app.py
     ├── requirements.txt
     ├── swagger.py
-    ├── models.py
-    └── database.py
+    ├── database.py
+    └── models.py
 ```
-
----
 
 ## Team Responsibilities
 
-| Member | Microservice | Primary Responsibilities | API Endpoints |
-|--------|--------------|------------------------|---------------|
-| Member A | Student Service | Manage student profiles, search, filtering, and analytics | POST/GET/PUT/DELETE /students, GET /students/search, GET /students/by-course, GET /students/by-email, GET /students/count, GET /students/courses, GET /students/course/{course}/count |
-| Member B | Course Service | Manage course catalog, course details, instructors | GET/POST/PUT/DELETE /courses |
-| Member C | Enrollment Service | Handle student enrollments, drop courses, enrollment history | GET/POST/DELETE /enrollments |
-| Member D | Grade Service | Manage grades, grade submissions, grade reports, GPA analytics | GET/POST/PUT/DELETE /grades |
-
-### Grade Service Key Features
-
-The Grade Service provides comprehensive grade management capabilities:
-
-- **Create, Read, Update, Delete grades** - Full CRUD operations for grade records
-- **Search by instructor** - Query grades filtered by instructor name
-- **Check availability** - Verify grade availability for enrollments
-- **Generate GPA** - Calculate and generate Grade Point Average reports
-- **Duplicate protection** - Prevent duplicate grade records for the same `enrollment_id` (`409 Conflict`)
-- **Validation and error handling** - Required field checks (`400`), not found responses (`404`), and conflict handling (`409`)
-
-### Grade Service Endpoints (Implemented)
-
-- `GET /health`
-- `GET /grades`
-- `GET /grades/<grade_id>`
-- `GET /grades/enrollment/<enrollment_id>`
-- `GET /grades/instructor/<instructor>`
-- `GET /grades/availability/<enrollment_id>`
-- `GET /grades/gpa/<enrollment_id>`
-- `GET /grades/gpa/overall`
-- `POST /grades`
-- `PUT /grades/<grade_id>`
-- `DELETE /grades/<grade_id>`
-
----
-
-## Student Service API Endpoints
-
-### CRUD Endpoints
-- **POST** `/students` - Create a new student
-- **GET** `/students` - Get all students
-- **GET** `/students/{student_id}` - Get a specific student by ID
-- **PUT** `/students/{student_id}` - Update a student
-- **DELETE** `/students/{student_id}` - Delete a student
-
-### Search & Filter Endpoints (Category 1)
-- **GET** `/students/search?name={name}` - Search students by name (case-insensitive)
-- **GET** `/students/by-course/{course}` - Get all students in a specific course
-- **GET** `/students/by-email/{email}` - Get a student by email
-
-### Statistics Endpoints (Category 2)
-- **GET** `/students/count` - Get total number of students
-- **GET** `/students/courses` - Get list of all unique courses
-- **GET** `/students/course/{course}/count` - Get count of students in a specific course
-
----
+| Member | Microservice | Primary Responsibilities | Main API Endpoints |
+|--------|--------------|--------------------------|--------------------|
+| Member A | Student Service | Student profiles, search, filtering, analytics | `/students`, `/students/search`, `/students/by-course/{course}`, `/students/by-email/{email}`, `/students/count`, `/students/courses`, `/students/course/{course}/count` |
+| Member B | Course Service | Course catalog and instructor management | `/courses`, `/courses/instructor/{instructor}`, `/courses/available`, `/stats` |
+| Member C | Enrollment Service | Student enrollment lifecycle and mapping queries | `/health`, `/enrollments`, `/students/{studentId}/courses`, `/courses/{courseId}/students` |
+| Member D | Grade Service | Grade CRUD, availability, instructor filtering, GPA analytics | `/health`, `/grades`, `/grades/enrollment/{enrollment_id}`, `/grades/instructor/{instructor}`, `/grades/availability/{enrollment_id}`, `/grades/gpa/{enrollment_id}`, `/grades/gpa/overall` |
 
 ## Technology Stack
 
-- **Language:** Python 3.8+
-- **Framework:** FastAPI (Student Service), Flask (Other Services)
-- **Server:** Uvicorn (FastAPI), Flask development server (Other Services)
-- **Database:** SQLite (via SQLAlchemy ORM)
-- **API Documentation:** Swagger UI (FastAPI auto-docs)
-- **Gateway:** Flask with custom routing
-
----
-
-## Database Design
-
-Each microservice has its own SQLite database file for data persistence:
-
-### Student Service Database (`students.db`)
-```sql
-CREATE TABLE students (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name VARCHAR(100) NOT NULL,
-    email VARCHAR(100) NOT NULL,
-    course VARCHAR(100) NOT NULL
-);
-```
-
-### Course Service Database (`course_service.db`)
-```sql
-CREATE TABLE courses (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title VARCHAR(200) NOT NULL,
-    description TEXT,
-    instructor VARCHAR(100),
-    credits INTEGER DEFAULT 3,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-### Enrollment Service Database (`enrollment_service.db`)
-```sql
-CREATE TABLE enrollments (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    student_id INTEGER NOT NULL,
-    course_id INTEGER NOT NULL,
-    enrollment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    status VARCHAR(20) DEFAULT 'active'
-);
-```
-
-### Grade Service Database (`grade_service.db`)
-```sql
-CREATE TABLE grades (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    enrollment_id INTEGER NOT NULL,
-    instructor VARCHAR(100),
-    grade VARCHAR(5),
-    feedback TEXT,
-    graded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-Business rule implemented in API layer:
-- One grade record is allowed per `enrollment_id` (duplicate create/update returns `409 Conflict`).
-
----
+- Python 3.8+
+- FastAPI for `student-service`
+- Flask for `enrollment-service` and `grade-service`
+- Node.js / Express for `course-service`
+- Node.js HTTP server for `api-gateway`
+- SQLite / SQLAlchemy where applicable
+- Swagger UI / OpenAPI docs per service
 
 ## Getting Started
 
 ### Prerequisites
+
 - Python 3.8 or higher
-- pip (Python Package Manager)
+- Node.js 18 or higher
+- `pip`
+- `npm`
 
 ### Installation
 
-1. Clone the repository
-2. Install dependencies for each service:
-
 ```bash
-# Install API Gateway dependencies
+# API Gateway
 cd "Swagger UI with backend/api-gateway"
-pip install -r requirements.txt
+npm install
 
-# Install Student Service dependencies
+# Student Service
 cd ../student-service
 pip install -r requirements.txt
 
-# Install Course Service dependencies
+# Course Service
 cd ../course-service
-pip install -r requirements.txt
+npm install
 
-# Install Enrollment Service dependencies
+# Enrollment Service
 cd ../enrollment-service
 pip install -r requirements.txt
 
-# Install Grade Service dependencies
+# Grade Service
 cd ../grade-service
 pip install -r requirements.txt
 ```
 
 ### Running the Services
 
-Start each service in separate terminals:
+Start each service in a separate terminal:
 
 ```bash
-# Terminal 1 - API Gateway (Port 8080)
+# Terminal 1 - API Gateway
 cd "Swagger UI with backend/api-gateway"
-python app.py
+node app.js
 
-# Terminal 2 - Student Service (Port 8000)
+# Terminal 2 - Student Service
 cd "Swagger UI with backend/student-service"
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
-# Terminal 3 - Course Service (Port 5002)
+# Terminal 3 - Course Service
 cd "Swagger UI with backend/course-service"
-python app.py
+node app.js
 
-# Terminal 4 - Enrollment Service (Port 5003)
+# Terminal 4 - Enrollment Service
 cd "Swagger UI with backend/enrollment-service"
 python app.py
 
-# Terminal 5 - Grade Service (Port 5004)
+# Terminal 5 - Grade Service
 cd "Swagger UI with backend/grade-service"
 python app.py
 ```
 
----
-
 ## API Access
 
-### Direct Access (Individual Services)
+### Direct Access
 
-| Service | URL | Swagger UI |
-|---------|-----|------------|
-| Student Service | http://localhost:8000 | http://localhost:8000/docs |
-| Course Service | http://localhost:5002 | http://localhost:5002/api-docs |
-| Enrollment Service | http://localhost:5003 | http://localhost:5003/api-docs |
-| Grade Service | http://localhost:5004 | http://localhost:5004/apidocs |
+| Service | Base URL | Swagger UI |
+|---------|----------|------------|
+| Student Service | `http://localhost:8000` | `http://localhost:8000/docs` |
+| Course Service | `http://localhost:5002` | `http://localhost:5002/api-docs` |
+| Enrollment Service | `http://localhost:5003` | `http://localhost:5003/api-docs/` |
+| Grade Service | `http://localhost:5004` | `http://localhost:5004/apidocs` |
 
 ### Via API Gateway
 
-| Service | URL | Swagger UI |
-|---------|-----|------------|
-| Student Service | http://localhost:8080/student-service | http://localhost:8080/student-service/api-docs |
-| Course Service | http://localhost:8080/course-service | http://localhost:8080/course-service/api-docs |
-| Enrollment Service | http://localhost:8080/enrollment-service | http://localhost:8080/enrollment-service/api-docs |
-| Grade Service | http://localhost:8080/grade-service | http://localhost:8080/grade-service/apidocs |
+| Service | Base URL | Swagger UI |
+|---------|----------|------------|
+| Student Service | `http://localhost:8080/student-service` | `http://localhost:8080/student-service/docs` |
+| Course Service | `http://localhost:8080/course-service` | `http://localhost:8080/course-service/api-docs` |
+| Enrollment Service | `http://localhost:8080/enrollment-service` | `http://localhost:8080/enrollment-service/api-docs/` |
+| Grade Service | `http://localhost:8080/grade-service` | `http://localhost:8080/grade-service/apidocs` |
 
 ### Health Check
-```
-http://localhost:8080/health
-```
 
----
+`http://localhost:8080/health`
 
-## Assignment Requirements
+## API Gateway Notes
+
+- The gateway forwards requests to all four microservices.
+- Supported methods include `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, and `OPTIONS`.
+- CORS headers are applied at the gateway.
+- Redirect and documentation asset paths are rewritten so Swagger/OpenAPI pages work correctly through gateway prefixes.
+
+## Assignment Checklist
 
 - [ ] All 4 services run without errors
 - [ ] API Gateway runs without errors
-- [ ] Each service's Swagger UI accessible directly (4 screenshots)
-- [ ] Each service's Swagger UI accessible via gateway (4 screenshots)
-- [ ] All CRUD operations work (test with Postman)
+- [ ] Each service Swagger UI is accessible directly
+- [ ] Each service Swagger UI is accessible via gateway
+- [ ] CRUD operations work in Postman
 - [ ] Folder structure matches requirements
-- [ ] Slide deck is professional with all screenshots
-- [ ] Individual contributions clearly listed
-
----
+- [ ] Slide deck includes screenshots and contribution details
 
 ## License
 
