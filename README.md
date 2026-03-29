@@ -66,19 +66,41 @@ Swagger UI with backend/
 
 | Member | Microservice | Primary Responsibilities | API Endpoints |
 |--------|--------------|------------------------|---------------|
-| Member A | Student Service | Manage student profiles, registration, authentication | GET/POST/PUT/DELETE /students |
+| Member A | Student Service | Manage student profiles, search, filtering, and analytics | POST/GET/PUT/DELETE /students, GET /students/search, GET /students/by-course, GET /students/by-email, GET /students/count, GET /students/courses, GET /students/course/{course}/count |
 | Member B | Course Service | Manage course catalog, course details, instructors | GET/POST/PUT/DELETE /courses |
 | Member C | Enrollment Service | Handle student enrollments, drop courses, enrollment history | GET/POST/DELETE /enrollments |
 | Member D | Grade Service | Manage grades, grade submissions, grade reports | GET/POST/PUT /grades |
 
 ---
 
+## Student Service API Endpoints
+
+### CRUD Endpoints
+- **POST** `/students` - Create a new student
+- **GET** `/students` - Get all students
+- **GET** `/students/{student_id}` - Get a specific student by ID
+- **PUT** `/students/{student_id}` - Update a student
+- **DELETE** `/students/{student_id}` - Delete a student
+
+### Search & Filter Endpoints (Category 1)
+- **GET** `/students/search?name={name}` - Search students by name (case-insensitive)
+- **GET** `/students/by-course/{course}` - Get all students in a specific course
+- **GET** `/students/by-email/{email}` - Get a student by email
+
+### Statistics Endpoints (Category 2)
+- **GET** `/students/count` - Get total number of students
+- **GET** `/students/courses` - Get list of all unique courses
+- **GET** `/students/course/{course}/count` - Get count of students in a specific course
+
+---
+
 ## Technology Stack
 
 - **Language:** Python 3.8+
-- **Framework:** Flask
+- **Framework:** FastAPI (Student Service), Flask (Other Services)
+- **Server:** Uvicorn (FastAPI), Flask development server (Other Services)
 - **Database:** SQLite (via SQLAlchemy ORM)
-- **API Documentation:** Swagger UI (via flasgger)
+- **API Documentation:** Swagger UI (FastAPI auto-docs)
 - **Gateway:** Flask with custom routing
 
 ---
@@ -87,14 +109,13 @@ Swagger UI with backend/
 
 Each microservice has its own SQLite database file for data persistence:
 
-### Student Service Database (`student_service.db`)
+### Student Service Database (`students.db`)
 ```sql
 CREATE TABLE students (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name VARCHAR(100) NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    phone VARCHAR(20),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    email VARCHAR(100) NOT NULL,
+    course VARCHAR(100) NOT NULL
 );
 ```
 
@@ -176,9 +197,9 @@ Start each service in separate terminals:
 cd "Swagger UI with backend/api-gateway"
 python app.py
 
-# Terminal 2 - Student Service (Port 5001)
+# Terminal 2 - Student Service (Port 8000)
 cd "Swagger UI with backend/student-service"
-python app.py
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
 # Terminal 3 - Course Service (Port 5002)
 cd "Swagger UI with backend/course-service"
@@ -201,7 +222,7 @@ python app.py
 
 | Service | URL | Swagger UI |
 |---------|-----|------------|
-| Student Service | http://localhost:5001 | http://localhost:5001/api-docs |
+| Student Service | http://localhost:8000 | http://localhost:8000/docs |
 | Course Service | http://localhost:5002 | http://localhost:5002/api-docs |
 | Enrollment Service | http://localhost:5003 | http://localhost:5003/api-docs |
 | Grade Service | http://localhost:5004 | http://localhost:5004/api-docs |
