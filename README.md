@@ -1,6 +1,6 @@
-# E-Learning-System-MTIT-Project
+# E-Learning System MTIT Project
 
-E-Learning platform built with four microservices and a shared API Gateway.
+This repository contains an e-learning platform built with four microservices and a lightweight API Gateway.
 
 ## Architecture Overview
 
@@ -9,8 +9,8 @@ E-Learning platform built with four microservices and a shared API Gateway.
                Single entry point for all requests
 
         Student        Course        Enrollment        Grade
-        Service        Service        Service         Service
-        Port 8000      Port 5002      Port 5003       Port 5004
+        Service        Service       Service           Service
+        Port 8000      Port 5002     Port 5003         Port 5004
 ```
 
 ## Project Structure
@@ -23,54 +23,48 @@ Swagger UI with backend/
 │   └── README.md
 ├── student-service/
 │   ├── main.py
-│   ├── requirements.txt
 │   ├── database.py
-│   └── models.py
+│   ├── models.py
+│   ├── requirements.txt
+│   └── README.md
 ├── course-service/
 │   ├── app.js
 │   ├── package.json
-│   └── package-lock.json
+│   ├── package-lock.json
+│   └── README.md
 ├── enrollment-service/
 │   ├── app.py
 │   ├── requirements.txt
 │   └── README.md
 └── grade-service/
     ├── app.py
-    ├── requirements.txt
-    ├── swagger.py
     ├── database.py
-    └── models.py
+    ├── models.py
+    ├── swagger.py
+    ├── requirements.txt
+    └── README.md
 ```
 
-## Team Responsibilities
+## Services
 
-| Member | Microservice | Primary Responsibilities | Main API Endpoints |
-|--------|--------------|--------------------------|--------------------|
-| Member A | Student Service | Student profiles, search, filtering, analytics | `/students`, `/students/search`, `/students/by-course/{course}`, `/students/by-email/{email}`, `/students/count`, `/students/courses`, `/students/course/{course}/count` |
-| Member B | Course Service | Course catalog and instructor management | `/courses`, `/courses/instructor/{instructor}`, `/courses/available`, `/stats` |
-| Member C | Enrollment Service | Student enrollment lifecycle and mapping queries | `/health`, `/enrollments`, `/students/{studentId}/courses`, `/courses/{courseId}/students` |
-| Member D | Grade Service | Grade CRUD, availability, instructor filtering, GPA analytics | `/health`, `/grades`, `/grades/enrollment/{enrollment_id}`, `/grades/instructor/{instructor}`, `/grades/availability/{enrollment_id}`, `/grades/gpa/{enrollment_id}`, `/grades/gpa/overall` |
+| Service | Tech Stack | Port | README |
+|---------|------------|------|--------|
+| API Gateway | Node.js HTTP server | 8080 | [api-gateway/README.md](./Swagger%20UI%20with%20backend/api-gateway/README.md) |
+| Student Service | FastAPI + SQLAlchemy + SQLite | 8000 | [student-service/README.md](./Swagger%20UI%20with%20backend/student-service/README.md) |
+| Course Service | Express + Swagger UI | 5002 | [course-service/README.md](./Swagger%20UI%20with%20backend/course-service/README.md) |
+| Enrollment Service | Flask + in-memory data + OpenAPI UI | 5003 | [enrollment-service/README.md](./Swagger%20UI%20with%20backend/enrollment-service/README.md) |
+| Grade Service | Flask + SQLAlchemy + Flasgger | 5004 | [grade-service/README.md](./Swagger%20UI%20with%20backend/grade-service/README.md) |
 
-## Technology Stack
-
-- Python 3.8+
-- FastAPI for `student-service`
-- Flask for `enrollment-service` and `grade-service`
-- Node.js / Express for `course-service`
-- Node.js HTTP server for `api-gateway`
-- SQLite / SQLAlchemy where applicable
-- Swagger UI / OpenAPI docs per service
-
-## Getting Started
-
-### Prerequisites
+## Prerequisites
 
 - Python 3.8 or higher
 - Node.js 18 or higher
 - `pip`
 - `npm`
 
-### Installation
+## Installation
+
+Install dependencies inside each service folder:
 
 ```bash
 # API Gateway
@@ -94,9 +88,9 @@ cd ../grade-service
 pip install -r requirements.txt
 ```
 
-### Running the Services
+## Running the System
 
-Start each service in a separate terminal:
+Start each component in a separate terminal:
 
 ```bash
 # Terminal 1 - API Gateway
@@ -124,8 +118,8 @@ python app.py
 
 ### Direct Access
 
-| Service | Base URL | Swagger UI |
-|---------|----------|------------|
+| Service | Base URL | Swagger / OpenAPI UI |
+|---------|----------|----------------------|
 | Student Service | `http://localhost:8000` | `http://localhost:8000/docs` |
 | Course Service | `http://localhost:5002` | `http://localhost:5002/api-docs` |
 | Enrollment Service | `http://localhost:5003` | `http://localhost:5003/api-docs/` |
@@ -133,32 +127,41 @@ python app.py
 
 ### Via API Gateway
 
-| Service | Base URL | Swagger UI |
-|---------|----------|------------|
+| Service | Gateway Base URL | Swagger / OpenAPI UI |
+|---------|------------------|----------------------|
 | Student Service | `http://localhost:8080/student-service` | `http://localhost:8080/student-service/docs` |
 | Course Service | `http://localhost:8080/course-service` | `http://localhost:8080/course-service/api-docs` |
 | Enrollment Service | `http://localhost:8080/enrollment-service` | `http://localhost:8080/enrollment-service/api-docs/` |
 | Grade Service | `http://localhost:8080/grade-service` | `http://localhost:8080/grade-service/apidocs` |
 
-### Health Check
+Gateway health check:
 
 `http://localhost:8080/health`
 
-## API Gateway Notes
+## Core Responsibilities
+
+| Service | Responsibilities | Main Endpoints |
+|---------|------------------|----------------|
+| Student Service | Student CRUD, search, filtering, course-based lookups, counts | `/students`, `/students/search`, `/students/by-course/{course}`, `/students/by-email/{email}`, `/students/count` |
+| Course Service | Course CRUD, instructor filtering, seat availability, statistics | `/courses`, `/courses/{id}`, `/courses/instructor/{instructor}`, `/courses/available`, `/stats` |
+| Enrollment Service | Enrollment creation, updates, drops, student-course mapping | `/health`, `/enrollments`, `/enrollments/{id}`, `/students/{studentId}/courses`, `/courses/{courseId}/students` |
+| Grade Service | Grade CRUD, grade availability, instructor filtering, GPA calculations | `/health`, `/grades`, `/grades/enrollment/{enrollment_id}`, `/grades/instructor/{instructor}`, `/grades/availability/{enrollment_id}`, `/grades/gpa/{enrollment_id}`, `/grades/gpa/overall` |
+
+## Notes About the API Gateway
 
 - The gateway forwards requests to all four microservices.
-- Supported methods include `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, and `OPTIONS`.
-- CORS headers are applied at the gateway.
-- Redirect and documentation asset paths are rewritten so Swagger/OpenAPI pages work correctly through gateway prefixes.
+- It supports `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, and `OPTIONS`.
+- CORS headers are applied at the gateway level.
+- Documentation asset paths are rewritten so Swagger and OpenAPI pages work through the gateway prefixes.
 
 ## Assignment Checklist
 
-- [ ] All 4 services run without errors
+- [ ] All four services run without errors
 - [ ] API Gateway runs without errors
-- [ ] Each service Swagger UI is accessible directly
-- [ ] Each service Swagger UI is accessible via gateway
-- [ ] CRUD operations work in Postman
-- [ ] Folder structure matches requirements
+- [ ] Swagger or OpenAPI UI is accessible directly for each service
+- [ ] Swagger or OpenAPI UI is accessible through the API Gateway
+- [ ] CRUD operations can be tested in Postman
+- [ ] README files exist for each microservice
 - [ ] Slide deck includes screenshots and contribution details
 
 ## License

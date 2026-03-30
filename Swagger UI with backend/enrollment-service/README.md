@@ -1,40 +1,69 @@
 # Enrollment Service
 
-Member C deliverable for the MTIT Assignment 2 E-Learning Platform.
+Enrollment management microservice for the e-learning platform.
 
-## Run
+## Overview
+
+This service is built with Flask and keeps enrollment data in memory. It manages the student-course relationship, supports enrollment creation and updates, and exposes a lightweight OpenAPI documentation page.
+
+## Tech Stack
+
+- Flask
+- Flask-CORS
+- In-memory data store
+- OpenAPI 3.0 JSON + embedded Swagger UI page
+
+## Run Locally
 
 ```bash
-cd enrollment-service
+cd "Swagger UI with backend/enrollment-service"
 pip install -r requirements.txt
 python app.py
 ```
 
-Direct URLs:
+## URLs
 
-- API base: `http://localhost:5003`
+### Direct Access
+
+- Base URL: `http://localhost:5003`
 - Swagger UI: `http://localhost:5003/api-docs/`
 - OpenAPI JSON: `http://localhost:5003/openapi.json`
+- Health: `http://localhost:5003/health`
 
-Gateway URLs after proxying:
+### Via API Gateway
 
-- API base: `http://localhost:8080/enrollment-service`
+- Base URL: `http://localhost:8080/enrollment-service`
 - Swagger UI: `http://localhost:8080/enrollment-service/api-docs/`
+- OpenAPI JSON: `http://localhost:8080/enrollment-service/openapi.json`
+- Health: `http://localhost:8080/enrollment-service/health`
+
+## Main Files
+
+- `app.py` - Flask routes, OpenAPI spec, and in-memory enrollment state
+- `requirements.txt` - Python dependencies
 
 ## Endpoints
 
+### Health
+
 - `GET /health`
+
+### Enrollment CRUD
+
 - `GET /enrollments`
-- `GET /enrollments/<id>`
+- `GET /enrollments/{id}`
 - `POST /enrollments`
-- `PUT /enrollments/<id>`
-- `DELETE /enrollments/<id>`
-- `GET /students/<student_id>/courses`
-- `GET /courses/<course_id>/students`
+- `PUT /enrollments/{id}`
+- `DELETE /enrollments/{id}`
 
-## Demo Requests
+### Relationship Queries
 
-Create enrollment:
+- `GET /students/{studentId}/courses`
+- `GET /courses/{courseId}/students`
+
+## Example Request Bodies
+
+### Create Enrollment
 
 ```json
 {
@@ -43,7 +72,7 @@ Create enrollment:
 }
 ```
 
-Mark completed:
+### Update Enrollment Status
 
 ```json
 {
@@ -51,9 +80,9 @@ Mark completed:
 }
 ```
 
-## Behavior Notes
+## Notes
 
+- `POST /enrollments` creates a new enrollment or reactivates a previously dropped one.
 - Duplicate active or completed enrollments return `409 Conflict`.
-- Deleting an enrollment performs a soft drop by setting `status` to `dropped`.
-- Posting the same `studentId` and `courseId` after a drop reactivates the existing record.
-- The service does not call other microservices, so demos remain stable even if teammate services are offline.
+- `DELETE /enrollments/{id}` is a soft delete that changes the status to `dropped`.
+- Data is stored in memory, so the state resets when the service restarts.
