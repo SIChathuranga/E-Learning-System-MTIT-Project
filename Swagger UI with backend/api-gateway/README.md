@@ -4,7 +4,7 @@ Single entry point for all microservices in the e-learning platform.
 
 ## Overview
 
-This gateway is implemented with Node.js using the built-in HTTP server. It proxies requests to all backend services and rewrites documentation-related paths so Swagger and OpenAPI pages continue to work through gateway prefixes.
+This gateway is implemented with Node.js using the built-in HTTP server. It proxies requests to all backend services, rewrites documentation-related paths so Swagger and OpenAPI pages continue to work through gateway prefixes, and performs upstream-aware health checks.
 
 ## Covered Services
 
@@ -14,6 +14,13 @@ This gateway is implemented with Node.js using the built-in HTTP server. It prox
 | `/course-service` | Course Service | `http://localhost:5002` |
 | `/enrollment-service` | Enrollment Service | `http://localhost:5003` |
 | `/grade-service` | Grade Service | `http://localhost:5004` |
+
+Each target can also be overridden with environment variables:
+
+- `STUDENT_SERVICE_URL`
+- `COURSE_SERVICE_URL`
+- `ENROLLMENT_SERVICE_URL`
+- `GRADE_SERVICE_URL`
 
 ## Run Locally
 
@@ -41,8 +48,9 @@ node app.js
 - Proxies incoming requests to the correct upstream service.
 - Supports `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, and `OPTIONS`.
 - Applies CORS headers at the gateway layer.
-- Rewrites redirect and static documentation asset paths for Student and Grade service docs.
-- Returns a summary of registered services from `/` and `/health`.
+- Rewrites redirect and documentation asset paths for Student, Enrollment, and Grade service docs.
+- Returns a summary of registered services from `/`.
+- Checks upstream service availability from `/health` and reports per-service status.
 
 ## Main Files
 
@@ -53,3 +61,4 @@ node app.js
 
 - The gateway does not replace the services; each target service must still be running locally.
 - If an upstream service is unavailable, the gateway returns `502 Failed to reach upstream service`.
+- If one or more upstream health checks fail, the gateway `/health` endpoint returns `503` with per-service details.

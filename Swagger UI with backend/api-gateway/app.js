@@ -5,8 +5,9 @@ const PORT = 8080;
 const SERVICES = {
   "/student-service": {
     name: "Student Service",
-    target: "http://localhost:8000",
+    target: process.env.STUDENT_SERVICE_URL || "http://localhost:8000",
     docs: "/docs",
+    health: "/students",
     rewrites: [
       ["/openapi.json", "/student-service/openapi.json"],
       ["/docs/oauth2-redirect", "/student-service/docs/oauth2-redirect"],
@@ -16,18 +17,25 @@ const SERVICES = {
   },
   "/course-service": {
     name: "Course Service",
-    target: "http://localhost:5002",
+    target: process.env.COURSE_SERVICE_URL || "http://localhost:5002",
     docs: "/api-docs",
+    health: "/courses",
   },
   "/enrollment-service": {
     name: "Enrollment Service",
-    target: "http://localhost:5003",
+    target: process.env.ENROLLMENT_SERVICE_URL || "http://localhost:5003",
     docs: "/api-docs/",
+    health: "/health",
+    rewrites: [
+      ["url: \"../openapi.json\"", "url: window.location.origin + '/enrollment-service/openapi.json'"],
+      ["url: '../openapi.json'", "url: window.location.origin + '/enrollment-service/openapi.json'"],
+    ],
   },
   "/grade-service": {
     name: "Grade Service",
-    target: "http://localhost:5004",
+    target: process.env.GRADE_SERVICE_URL || "http://localhost:5004",
     docs: "/apidocs",
+    health: "/health",
     rewrites: [
       ["/flasgger_static", "/grade-service/flasgger_static"],
       ["/apispec.json", "/grade-service/apispec.json"],
@@ -152,9 +160,51 @@ function gatewayOverview() {
       gatewayBaseUrl: `http://localhost:${PORT}${prefix}`,
       directServiceUrl: service.target,
       docsViaGateway: `http://localhost:${PORT}${prefix}${service.docs}`,
+      healthCheckTarget: `${service.target}${service.health}`,
     };
     return summary;
   }, {});
+}
+
+async function getServiceHealth() {
+  const checks = await Promise.all(
+    Object.entries(SERVICES).map(async ([prefix, service]) => {
+      const healthUrl = new URL(service.health || "/", service.target);
+
+      try {
+        const startedAt = Date.now();
+        const response = await fetch(healthUrl, { method: "GET" });
+
+        return {
+          prefix,
+          name: service.name,
+          target: service.target,
+          healthUrl: healthUrl.toString(),
+          status: response.ok ? "UP" : "DEGRADED",
+          statusCode: response.status,
+          responseTimeMs: Date.now() - startedAt,
+        };
+      } catch (error) {
+        return {
+          prefix,
+          name: service.name,
+          target: service.target,
+          healthUrl: healthUrl.toString(),
+          status: "DOWN",
+          statusCode: null,
+          responseTimeMs: null,
+          error: error instanceof Error ? error.message : "Unknown health check error",
+        };
+      }
+    }),
+  );
+
+  const allHealthy = checks.every((check) => check.status === "UP");
+
+  return {
+    overallStatus: allHealthy ? "OK" : "DEGRADED",
+    services: checks,
+  };
 }
 
 const server = http.createServer(async (req, res) => {
@@ -171,12 +221,16 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (pathname === "/" || pathname === "/health") {
-    sendJson(res, 200, {
-      status: "OK",
+    const health = await getServiceHealth();
+    const statusCode = health.overallStatus === "OK" ? 200 : 503;
+
+    sendJson(res, statusCode, {
+      status: health.overallStatus,
       gateway: "API Gateway",
       port: PORT,
       timestamp: new Date().toISOString(),
       services: gatewayOverview(),
+      upstreamChecks: health.services,
     });
     return;
   }
