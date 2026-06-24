@@ -113,6 +113,9 @@ async function proxyRequest(req, res, prefix, service) {
 
   delete headers.host;
   delete headers.connection;
+  delete headers["content-length"];
+  delete headers["transfer-encoding"];
+  delete headers.expect;
 
   const requestInit = {
     method: req.method,

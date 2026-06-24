@@ -1,0 +1,16 @@
+API Gateway running on http://localhost:8080
+Student Service: http://localhost:8080/student-service
+Student Service docs: http://localhost:8080/student-service/docs
+Course Service: http://localhost:8080/course-service
+Course Service docs: http://localhost:8080/course-service/api-docs
+Enrollment Service: http://localhost:8080/enrollment-service
+Enrollment Service docs: http://localhost:8080/enrollment-service/api-docs/
+Grade Service: http://localhost:8080/grade-service
+Grade Service docs: http://localhost:8080/grade-service/apidocs
+[Gateway] PUT /grade-service/grades/12
+[Gateway] DELETE /grade-service/grades/12
+[Gateway] GET /grade-service/grades
+[Gateway] POST /grade-service/grades
+[Gateway] PUT /grade-service/grades/12
+[Gateway] GET /grade-service/grades/12
+[Gateway] DELETE /grade-service/grades/12
